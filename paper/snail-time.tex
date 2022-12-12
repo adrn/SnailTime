@@ -1,7 +1,7 @@
 % Notes:
 % -
 
-% Relevant papers:
+% Relevant papers (for bibliograph):
 % https://arxiv.org/pdf/1903.01493.pdf
 % https://arxiv.org/pdf/2009.02434.pdf
 % https://arxiv.org/pdf/1809.02658.pdf
@@ -36,38 +36,78 @@
 \usepackage{enumitem}
 \setlist[description]{style=unboxed}
 
-% Hogg's issues
-\renewcommand{\twocolumngrid}{\onecolumngrid} % guess what this does HAHAHA!
+% Some style hacks:
+\renewcommand{\twocolumngrid}{\onecolumngrid}
 \setlength{\parindent}{1.1\baselineskip}
 \addtolength{\topmargin}{-0.2in}
 \addtolength{\textheight}{0.4in}
 \sloppy\sloppypar\raggedbottom\frenchspacing
 
-% For referee:
-\newcommand{\changes}[1]{{\color{violet}#1}}
-
-
 \graphicspath{{figures/}}
 \input{preamble.tex}
+
+% Custom:
+\newcommand{\kepler}{\project{Kepler}}
+\newcommand{\ktwo}{\project{K2}}
+\newcommand{\tess}{\acronym{TESS}}
+\newcommand{\numax}{\ensuremath{\nu_{\rm max}}}
 
 \shorttitle{}
 \shortauthors{Price-Whelan et al.}
 
 \begin{document}
 
-\title{A First Look at Timing the Gaia Phase Spiral with Asteroseismology}
+\title{Timing Vertical Phase Spirals with Stellar Lifetimes}
 
-\author{People}
+\newcommand{\affcca}{
+    Center for Computational Astrophysics, Flatiron Institute,
+    Simons Foundation, 162 Fifth Avenue, New York, NY 10010, USA
+}
 
-% \author[0000-0003-0872-7098]{Adrian~M.~Price-Whelan}
-% \affiliation{Center for Computational Astrophysics, Flatiron Institute,
-%              Simons Foundation, 162 Fifth Avenue, New York, NY 10010, USA}
-% \email{aprice-whelan@flatironinstitute.org}
-% \correspondingauthor{Adrian M. Price-Whelan}
+\author[0000-0003-0872-7098]{Adrian~M.~Price-Whelan}
+\affiliation{\affcca}
+\email{aprice-whelan@flatironinstitute.org}
+\correspondingauthor{Adrian M. Price-Whelan}
+
+% TODO: orcid
+\author{Jason A. S. Hunt}
+\affiliation{\affcca}
+
+% TODO: orcid, aff
+% \author{Elise Darragh-Ford}
+% \affiliation{\affstanford}
+% \affiliation{\affcca}
+\
+% TODO: orcid, affs
+% \author{David~W.~Hogg}
+% \affiliation{\affcca}
+% \affiliation{\affnyu}
+% \affiliation{\affmpia}
+
+% TODO: orcid, aff
+% \author{Kathryn Johnston}
+% \affiliation{\affcolumbia}
+
+\author{+ more}
 
 
 \begin{abstract}\noindent
-TODO
+% Context
+The discovery of phase-space spiral features in the Milky Way disk --- made possible by exquisite stellar astrometry from the \gaia\ Mission --- has enabled new methods toward constraining the mass distribution and perturbation history of the Galaxy.
+These spiral features are thought to form as a result of phase mixing of orbits with different characteristic frequencies as a result of weak perturbations to the distribution function.
+As a result, the amplitude, morphology, and global dependence (over the Galactic disk), of vertical ($z$--$v_z$) phase spirals is determined by the time, timescales, and strengths of perturbations to the Milky Way and the resulting response of the system.
+Mapping and dynamically ``rewinding'' the observed phase spirals has therefore led to new insights about the orbit and interactions of the Sagittarius dwarf galaxy (a significant perturber of the Milky Way) and the subsequent evolution of the Galaxy.
+% Aims
+In this work, we aim to measure the onset time of vertical phase spirals in dynamically-separated populations of stars that are presently near the Sun by exploiting main-sequence stellar lifetimes rather than dynamical phase mixing.
+% Methods
+We use stellar temperatures derived from \gaia\ Data Release 3 (\dr{3}) and main sequence lifetimes predicted from the \placeholder{TODO} stellar models to split our stellar samples into subpopulations with consistent maximum stellar lifetimes.
+In these subpopulations, we measure the amplitude of non-phase-mixed structure in the vertical kinematics using empirical matched filters tuned to the orbit structure of a given dynamical patch, without assuming a form for the gravitational potential of the Milky Way.
+% Results
+We find that the ...
+% Conclusions
+This work presents a new approach for quantifying the onset time of vertical phase-space spirals in the Milky Way leveraging stellar physics rather than dynamics.
+
+
 \end{abstract}
 
 % \keywords{}
@@ -82,7 +122,7 @@ Stuff.
 
 Things.
 \subsection{Ages}
-In order to identify the timing of the creation of the phase spiral, and its potential connection to the Sagittarius dwarf galaxy, we need a large sample of stars with well constrained ages. While asteroseismic ages are the most precise and accurate option, previous space-based time series photometry missions like \kepler\ \citep{Borucki2010} and \ktwo\ \citep{someone} only targeted small numbers of stars in particular fields of the sky \citep{Pinsonneault2014, Pinsonneault2018, Pinsonneault2022, Stello2017, Zinn2020, Zinn2021}. The recent launch of the \tess mission \citep{Ricker:2014}, however, has made asteroseismology possible for large samples of stars across the sky. Initial investigations have demonstrated the potential of \tess\ for asteroseismology with single stars and restricted fields \citep{Huber2019, Mackereth2021}, but the all-sky search for giants is only just beginning.
+In order to identify the timing of the creation of the phase spiral, and its potential connection to the Sagittarius dwarf galaxy, we need a large sample of stars with well constrained ages. While asteroseismic ages are the most precise and accurate option, previous space-based time series photometry missions like \kepler \citep{Borucki2010} and \ktwo\ \citep{someone} only targeted small numbers of stars in particular fields of the sky \citep{Pinsonneault2014, Pinsonneault2018, Pinsonneault2022, Stello2017, Zinn2020, Zinn2021}. The recent launch of the \tess mission \citep{Ricker:2014}, however, has made asteroseismology possible for large samples of stars across the sky. Initial investigations have demonstrated the potential of \tess\ for asteroseismology with single stars and restricted fields \citep{Huber2019, Mackereth2021}, but the all-sky search for giants is only just beginning.
 
 \citet{Hon2021} represents the first attempt to identify and characterize large numbers of oscillating red giants across the prime mission (2 years, 26 sectors) in \tess. This analysis builds upon the machine learning efforts used in \kepler \citep{Hon201?} training a neural net to identify potential oscillations signals in the pictures of the Fourier transforms of QLP \citep{someone?} light curves. In the process of this analysis, the pipeline makes an estimate of the frequency of maximum oscillation power \numax. In combination with data from \gaia\ \citep{Gaia-Collaboration:2018}, which allows an estimate of the radius and temperature of these relatively nearby giants, one can estimate a mass for each of the 180,000 stars in the sample. \citet{Hon2021} caution that these masses may have larger scatter and a higher rate of significant errors than the sorts of asteroseismic results that have previously been published for \kepler\ and \ktwo\. However, some of the initial analysis shown in \citet{Hon2021} suggests that the ensemble of masses is sufficiently accurate to identify galactic structures including a younger thin disk plane, phase space ridges, and the correlation between mass and velocity dispersion.
 
@@ -109,7 +149,7 @@ asymmetries.
 \section{Conclusions} \label{sec:conclusions}
 
 
-\acknowledgements
+\begin{acknowledgements}
 
 It is a pleasure to thank ...
 
@@ -145,8 +185,10 @@ Data Processing and Analysis Consortium (DPAC,
 has been provided by national institutions, in particular the institutions
 participating in the {\it Gaia} Multilateral Agreement.
 
+\end{acknowledgements}
+
 \software{
-    Astropy \citep{astropy, astropy:2018},
+    Astropy \citep{astropy:2013, astropy:2018, astropy:2022},
     gala \citep{gala},
     IPython \citep{ipython},
     numpy \citep{numpy},
@@ -156,6 +198,6 @@ participating in the {\it Gaia} Multilateral Agreement.
 }
 
 \bibliographystyle{aasjournal}
-\bibliography{phase-spiral-astero}
+\bibliography{snail-time}
 
 \end{document}
