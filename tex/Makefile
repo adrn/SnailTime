@@ -2,11 +2,9 @@ LATEX       = pdflatex -interaction=nonstopmode -halt-on-error
 BASH        = bash -c
 ECHO        = echo
 RM          = rm -rf
-TMP_SUFFS   = pdf aux bbl blg log dvi ps eps out brf
-CHECK_RERUN =
-GIT_PATH    = .git/
+TMP_SUFFS   = pdf aux bbl blg log dvi ps eps out brf fdb_latexmk fls synctex.gz
 
-NAME = phase-spiral-astero
+NAME = snail-time
 
 all: ${NAME}.pdf
 
@@ -20,5 +18,4 @@ ${NAME}.pdf: ${NAME}.tex ${NAME}.bib
 
 clean:
 	${RM} $(foreach suff, ${TMP_SUFFS}, ${NAME}.${suff})
-	${RM} *.aux
 	${RM} *Notes.bib
