@@ -1,18 +1,19 @@
-gaiadr3_query = """
-SELECT
-    source_id, ra, dec,
-    parallax, parallax_error,
-    pmra, pmra_error,
-    pmdec, pmdec_error,
-    phot_g_mean_mag, phot_g_mean_flux_over_error,
-    phot_bp_mean_mag, phot_bp_mean_flux_over_error,
-    phot_rp_mean_mag, phot_rp_mean_flux_over_error,
-    radial_velocity, radial_velocity_error,
-    teff_gspphot, logg_gspphot, mh_gspphot,
-    distance_gspphot, ag_gspphot, ebpminrp_gspphot
-FROM
-    gaiadr3.gaia_source_lite
-WHERE
-    parallax > 0.1 AND
-    radial_velocity BETWEEN -1000 AND 1000
-"""
+import astropy.units as u
+import numpy as np
+
+
+def get_data_im(z, vz, bins):
+    """
+    Convert the raw data -- stellar positions and velocities z, vz -- into a binned 2D
+    histogram / image of number counts.
+    """
+    data_H, xe, ye = np.histogram2d(
+        vz.to_value(u.kpc/u.Myr),
+        z.to_value(u.kpc),
+        bins=(bins['vz'], bins['z'])
+    )
+    xc = 0.5 * (xe[:-1] + xe[1:])
+    yc = 0.5 * (ye[:-1] + ye[1:])
+    xc, yc = np.meshgrid(xc, yc)
+
+    return {'vz': xc, 'z': yc, 'H': data_H}
