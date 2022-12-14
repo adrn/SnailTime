@@ -1,5 +1,5 @@
 # Enable rule caching on Zenodo?
-cache_on_zenodo: true
+cache_on_zenodo: false
 
 # Workflow graph (DAG) generation
 dag:
@@ -37,7 +37,7 @@ dependencies:
   #   - src/tex/stylesheet.tex
 
 # Name of the `.tex` manuscript and corresponding `.pdf` article
-ms_name: ms
+ms_name: snail-time
 
 # Optimize DAG by removing unnecessary jobs upstream of cache hits?
 optimize_caching: false
@@ -45,7 +45,7 @@ optimize_caching: false
 # Overleaf sync settings
 overleaf:
   # Overleaf project ID (blank = disabled)
-  id: 
+  id:
   # Perform sync on GitHub Actions?
   gh_actions_sync: true
   # List of files to push to Overleaf
