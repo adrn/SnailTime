@@ -1,4 +1,4 @@
-rule sgrA_star:
+rule get_gaia_data:
     input:
         "src/scripts/get-gaia-data.py"
     output:
