@@ -1,5 +1,6 @@
 import astropy.units as u
 import numpy as np
+import jax.numpy as jnp
 
 
 def get_data_im(z, vz, bins):
@@ -16,4 +17,4 @@ def get_data_im(z, vz, bins):
     yc = 0.5 * (ye[:-1] + ye[1:])
     xc, yc = np.meshgrid(xc, yc)
 
-    return {'vz': xc, 'z': yc, 'H': data_H}
+    return {'z': jnp.array(yc), 'vz': jnp.array(xc), 'H': jnp.array(data_H.T)}

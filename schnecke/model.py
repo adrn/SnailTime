@@ -6,20 +6,19 @@ from jax.scipy.special import gammaln
 from jax_cosmo.scipy.interpolate import InterpolatedUnivariateSpline
 import jaxopt
 
-from .data import get_data_im
 from .jax_helpers import ln_gmm_density
 
 
 @jax.jit
 def distort_rz(rz, th, e2, e4):
-    return 1 + e2 * rz * jnp.cos(2 * th) + e4 * rz * jnp.cos(4 * th)
+    return 1 - e2 * rz * jnp.cos(2 * th) - e4 * rz * jnp.cos(4 * th)
 
 
 class VerticalOrbitModel:
 
     def __init__(self, e2_knots, e4_knots):
-        e2_knots = jnp.array(e2_knots)
-        e4_knots = jnp.array(e4_knots)
+        self.e2_knots = jnp.array(e2_knots)
+        self.e4_knots = jnp.array(e4_knots)
 
     @partial(jax.jit, static_argnames=['self'])
     def get_distorted_rz(self, init_rz, init_th, e2_vals, ln_e4_vals):
@@ -79,23 +78,28 @@ class VerticalOrbitModel:
     def objective(self, params, z, vz, H):
         return -(self.ln_poisson_likelihood(params, z, vz, H)) / H.size
 
-    @partial(jax.jit, static_argnames=['self'])
-    def optimize(self, params0, z, vz, bins, bounds=None):
-        data = get_data_im(z=z, vz=vz, bins=bins)
+    def optimize(self, params0, z, vz, H, bounds=None, jaxopt_kwargs=None):
+        if jaxopt_kwargs is None:
+            jaxopt_kwargs = dict()
+        jaxopt_kwargs.setdefault('maxiter', 16384)
 
         if bounds is not None:
+            jaxopt_kwargs.setdefault('method', 'L-BFGS-B')
             optimizer = jaxopt.ScipyBoundedMinimize(
                 fun=self.objective,
-                method='L-BFGS-B',
-                maxiter=16384,
-                options=dict(disp=False)
+                **jaxopt_kwargs
+                # options=dict(disp=False)
             )
             res = optimizer.run(
                 init_params=params0,
                 bounds=bounds,
-                z=data['z'],
-                vz=data['vz'],
-                H=data['H'].T,
+                z=z,
+                vz=vz,
+                H=H,
             )
 
-        return data, res
+        else:
+            jaxopt_kwargs.setdefault('method', 'BFGS')
+            raise NotImplementedError("TODO")
+
+        return res
