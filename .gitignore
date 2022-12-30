@@ -1,6 +1,7 @@
 # Custom:
 plots
-data
+*.fits
+*.ecsv
 
 # Compiled files
 *.py[cod]
