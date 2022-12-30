@@ -68,6 +68,15 @@ class VerticalOrbitModel:
         return rz, init_rz, init_th
 
     @partial(jax.jit, static_argnames=['self'])
+    def get_ln_dens(self, rz, ln_dens_vals):
+        spl = InterpolatedUnivariateSpline(
+            self.dens_knots,
+            ln_dens_vals,
+            k=3
+        )
+        return spl(rz)
+
+    @partial(jax.jit, static_argnames=['self'])
     def ln_density(self, params, z, vz):
         rz, _, th = self.get_rz_th(
             z - params['z0'], vz - params['vz0'],
@@ -75,13 +84,7 @@ class VerticalOrbitModel:
             e2_vals=params['e2_vals'],
             e4_vals=params['e4_vals']
         )
-
-        spl = InterpolatedUnivariateSpline(
-            self.dens_knots,
-            params['ln_dens_vals'],
-            k=3
-        )
-        return spl(rz)
+        return self.get_ln_dens(rz, params['ln_dens_vals'])
 
     @partial(jax.jit, static_argnames=['self'])
     def ln_poisson_likelihood(self, params, z, vz, H):
