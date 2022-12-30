@@ -6,7 +6,6 @@ from jax.scipy.special import gammaln
 from jax_cosmo.scipy.interpolate import InterpolatedUnivariateSpline
 import jaxopt
 
-from .jax_helpers import ln_gmm_density
 # from .pchip import pchip_interpolate_uniform
 
 
@@ -17,7 +16,8 @@ def distort_rz(rz, th, e2, e4):
 
 class VerticalOrbitModel:
 
-    def __init__(self, e2_knots, e4_knots):
+    def __init__(self, dens_knots, e2_knots, e4_knots):
+        self.dens_knots = jnp.array(dens_knots)
         self.e2_knots = jnp.array(e2_knots)
         self.e4_knots = jnp.array(e4_knots)
 
@@ -76,10 +76,12 @@ class VerticalOrbitModel:
             e4_vals=params['e4_vals']
         )
 
-        amps = jnp.exp(params['ln_amps'])
-        scales = jnp.exp(params['ln_scales'])
-        locs = jnp.zeros_like(scales)
-        return ln_gmm_density(rz, amps=amps, locs=locs, scales=scales, K=len(amps))
+        spl = InterpolatedUnivariateSpline(
+            self.dens_knots,
+            params['ln_dens_vals'],
+            k=3
+        )
+        return spl(rz)
 
     @partial(jax.jit, static_argnames=['self'])
     def ln_poisson_likelihood(self, params, z, vz, H):
