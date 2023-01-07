@@ -62,8 +62,23 @@ class VerticalOrbitModel:
     def get_initial_params(self, z, vz):
         """
         Estimate initial model parameters from the data
+
+        Parameters
+        ----------
+        z : quantity-like or array-like
+        vz : quantity-like or array-like
+
+        Returns
+        -------
+        model : `VerticalOrbitModel`
+            A copy of the initial model with state set to initial parameter estimates.
         """
         import numpy as np
+
+        if hasattr(z, 'unit'):
+            z = z.decompose(usys).value
+        if hasattr(vz, 'unit'):
+            vz = vz.decompose(usys).value
 
         std_z = 1.5 * MAD(z, ignore_nan=True)
         std_vz = 1.5 * MAD(vz, ignore_nan=True)
@@ -102,7 +117,10 @@ class VerticalOrbitModel:
 
     def _validate_state(self, names=None):
         if self.state is None or not hasattr(self.state, "keys"):
-            raise RuntimeError("TODO")
+            raise RuntimeError(
+                "Model state is not set or is invalid. Maybe you didn't initialize "
+                "properly, or run .optimize() yet?"
+            )
 
         else:
             if names is None:
@@ -111,9 +129,23 @@ class VerticalOrbitModel:
             for name in names:
                 assert name in self._state_names
                 if name not in self.state:
-                    raise RuntimeError("TODO")
+                    raise RuntimeError(
+                        f"Parameter {name} is missing from the model state"
+                    )
 
     def set_state(self, params, overwrite=False):
+        """
+        Set the model state parameters.
+
+        Default behavior is to not overwrite any existing state parameter values.
+
+        Parameters
+        ----------
+        params : dict
+            Parameters used to set the model state parameters.
+        overwrite : bool (optional)
+            Overwrite any existing state parameter values.
+        """
         if params is None:
             self.state = None
             return
@@ -128,8 +160,20 @@ class VerticalOrbitModel:
             else:
                 self.state.setdefault(k, params[k])
 
+    def get_params(self):
+        """
+        Transform the current model state to optimization parameter values
+        """
+        self._validate_state()
+        params = self.state.copy()
+        params['ln_Omega'] = jnp.log(self.pop('Omega'))
+        return params
+
     @partial(jax.jit, static_argnames=["self"])
     def get_es(self, rz_prime):
+        """
+        Compute the Fourier m-order coefficients
+        """
         self._validate_state(["e_vals"])
         e_vals = self.state["e_vals"]
 
@@ -140,6 +184,9 @@ class VerticalOrbitModel:
 
     @partial(jax.jit, static_argnames=["self"])
     def z_vz_to_rz_theta_prime(self, z, vz):
+        r"""
+        Compute :math:`r_z'` (``rz_prime``) and :math:`\theta_z'` (``theta_prime``)
+        """
         self._validate_state(["z0", "vz0", "Omega"])
 
         x = (vz - self.state["vz0"]) / jnp.sqrt(self.state["Omega"])
@@ -167,6 +214,9 @@ class VerticalOrbitModel:
 
     @partial(jax.jit, static_argnames=["self"])
     def get_rz_prime(self, rz, theta_prime):
+        """
+        Compute the raw radius :math:`r_z'` by inverting the distortion transformation
+        """
         self._validate_state()
         e_vals = self.state["e_vals"]
 
@@ -200,6 +250,10 @@ class VerticalOrbitModel:
 
     @partial(jax.jit, static_argnames=["self", "N_grid"])
     def get_Tz_Jz_thetaz(self, z, vz, N_grid):
+        """
+        Compute the vertical period, action, and angle given input phase-space
+        coordinates.
+        """
         rzp_, thp_ = self.z_vz_to_rz_theta_prime(z, vz)
         rz = self.get_rz(rzp_, thp_)
 
@@ -253,7 +307,25 @@ class VerticalOrbitModel:
     def objective(self, params, z, vz, H):
         return -(self.ln_poisson_likelihood(params, z, vz, H)) / H.size
 
-    def optimize(self, params0, z, vz, H, bounds=None, jaxopt_kwargs=None):
+    def optimize(self, z, vz, H, params0=None, bounds=None, jaxopt_kwargs=None):
+        """
+        Parameters
+        ----------
+        z : array-like
+        vz : array-like
+        H : array-like
+        params0 : dict (optional)
+        bounds : tuple of dict (optional)
+        jaxopt_kwargs : dict (optional)
+
+        Returns
+        -------
+        jaxopt_result : TODO
+            TODO
+        """
+        if params0 is None:
+            params0 = self.get_params()
+
         if jaxopt_kwargs is None:
             jaxopt_kwargs = dict()
         jaxopt_kwargs.setdefault("maxiter", 16384)
