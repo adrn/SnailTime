@@ -10,17 +10,12 @@ from jax.scipy.special import gammaln
 from jax_cosmo.scipy.interpolate import InterpolatedUnivariateSpline
 import jaxopt
 
+from .config import usys
 from .jax_helpers import simpson
 
 
 class VerticalOrbitModel:
-    _state_names = [
-        'Omega',
-        'e_vals',
-        'ln_dens_vals',
-        'z0',
-        'vz0'
-    ]
+    _state_names = ["Omega", "e_vals", "ln_dens_vals", "z0", "vz0"]
 
     def __init__(self, dens_knots, e_knots):
         r"""
@@ -65,6 +60,9 @@ class VerticalOrbitModel:
         self.state = None
 
     def get_initial_params(self, z, vz):
+        """
+        Estimate initial model parameters from the data
+        """
         import numpy as np
 
         std_z = 1.5 * MAD(z, ignore_nan=True)
@@ -74,7 +72,7 @@ class VerticalOrbitModel:
         model = self.copy()
 
         model.set_state(
-            {'z0': np.nanmedian(z), 'vz0': np.nanmedian(vz), 'Omega': Omega}
+            {"z0": np.nanmedian(z), "vz0": np.nanmedian(vz), "Omega": Omega}
         )
         rzp, _ = model.z_vz_to_rz_theta_prime_arr(z, vz)
 
@@ -82,28 +80,28 @@ class VerticalOrbitModel:
         rz_bins = np.linspace(0, max_rz, 25)  # TODO: fixed number
         dens_H, xe = np.histogram(rzp, bins=rz_bins)
         xc = 0.5 * (xe[:-1] + xe[1:])
-        ln_dens = np.log(dens_H) - np.log(2*np.pi * xc * (xe[1:] - xe[:-1]))
+        ln_dens = np.log(dens_H) - np.log(2 * np.pi * xc * (xe[1:] - xe[:-1]))
 
-        # TODO: this is a total hack -- why is this needed??
+        # TODO: WTF - this is a total hack -- why is this needed???
         ln_dens = ln_dens - 8.6
 
         spl = sci.InterpolatedUnivariateSpline(xc, ln_dens, k=1)
         ln_dens_vals = spl(model.dens_knots)
 
-        model.set_state({'ln_dens_vals': ln_dens_vals})
+        model.set_state({"ln_dens_vals": ln_dens_vals})
 
         # TODO: is there a better way?
         e_vals = {}
-        e_vals[2] = jnp.array([0., 0.1])
-        e_vals[4] = jnp.array([0., -0.05])
-        model.set_state({'e_vals': e_vals})
+        e_vals[2] = jnp.array([0.0, 0.1])
+        e_vals[4] = jnp.array([0.0, -0.05])
+        model.set_state({"e_vals": e_vals})
 
         model._validate_state()
 
         return model
 
     def _validate_state(self, names=None):
-        if self.state is None or not hasattr(self.state, 'keys'):
+        if self.state is None or not hasattr(self.state, "keys"):
             raise RuntimeError("TODO")
 
         else:
@@ -125,15 +123,15 @@ class VerticalOrbitModel:
             self.state = {}
 
         for k in params:
-            if k == 'ln_Omega':
-                self.state.setdefault('Omega', jnp.exp(params['ln_Omega']))
+            if k == "ln_Omega":
+                self.state.setdefault("Omega", jnp.exp(params["ln_Omega"]))
             else:
                 self.state.setdefault(k, params[k])
 
     @partial(jax.jit, static_argnames=["self"])
     def get_es(self, rz_prime):
-        self._validate_state(['e_vals'])
-        e_vals = self.state['e_vals']
+        self._validate_state(["e_vals"])
+        e_vals = self.state["e_vals"]
 
         es = {}
         for k, vals in e_vals.items():
@@ -142,15 +140,16 @@ class VerticalOrbitModel:
 
     @partial(jax.jit, static_argnames=["self"])
     def z_vz_to_rz_theta_prime(self, z, vz):
-        self._validate_state(['z0', 'vz0', 'Omega'])
+        self._validate_state(["z0", "vz0", "Omega"])
 
-        x = (vz - self.state['vz0']) / jnp.sqrt(self.state['Omega'])
-        y = (z - self.state['z0']) * jnp.sqrt(self.state['Omega'])
+        x = (vz - self.state["vz0"]) / jnp.sqrt(self.state["Omega"])
+        y = (z - self.state["z0"]) * jnp.sqrt(self.state["Omega"])
 
         rz_prime = jnp.sqrt(x**2 + y**2)
         th_prime = jnp.arctan2(y, x)
 
         return rz_prime, th_prime
+
     z_vz_to_rz_theta_prime_arr = jax.vmap(z_vz_to_rz_theta_prime, in_axes=[None, 0, 0])
 
     @partial(jax.jit, static_argnames=["self"])
@@ -169,7 +168,7 @@ class VerticalOrbitModel:
     @partial(jax.jit, static_argnames=["self"])
     def get_rz_prime(self, rz, theta_prime):
         self._validate_state()
-        e_vals = self.state['e_vals']
+        e_vals = self.state["e_vals"]
 
         # Shorthand
         thp = theta_prime
@@ -188,14 +187,14 @@ class VerticalOrbitModel:
     @partial(jax.jit, static_argnames=["self"])
     def get_z(self, rz, theta_prime):
         self._validate_state()
-        Omega = self.state['Omega']
+        Omega = self.state["Omega"]
         rzp = self.get_rz_prime(rz, theta_prime)
         return rzp * jnp.sin(theta_prime) / jnp.sqrt(Omega)
 
     @partial(jax.jit, static_argnames=["self"])
     def get_vz(self, rz, theta_prime):
         self._validate_state()
-        Omega = self.state['Omega']
+        Omega = self.state["Omega"]
         rzp = self.get_rz_prime(rz, theta_prime)
         return rzp * jnp.cos(theta_prime) * jnp.sqrt(Omega)
 
@@ -204,15 +203,9 @@ class VerticalOrbitModel:
         rzp_, thp_ = self.z_vz_to_rz_theta_prime(z, vz)
         rz = self.get_rz(rzp_, thp_)
 
-        dz_dthp_func = jax.vmap(
-            jax.grad(self.get_z, argnums=1),
-            in_axes=[None, 0]
-        )
+        dz_dthp_func = jax.vmap(jax.grad(self.get_z, argnums=1), in_axes=[None, 0])
 
-        get_vz = jax.vmap(
-            self.get_vz,
-            in_axes=[None, 0]
-        )
+        get_vz = jax.vmap(self.get_vz, in_axes=[None, 0])
 
         # Grid of theta_prime to do the integral over:
         thp_grid = jnp.linspace(0, jnp.pi / 2, N_grid)
@@ -220,13 +213,13 @@ class VerticalOrbitModel:
         dz_dthp = dz_dthp_func(rz, thp_grid)
 
         Tz = 4 * simpson(dz_dthp / vz_th, thp_grid)
-        Jz = 4 / (2*jnp.pi) * simpson(dz_dthp * vz_th, thp_grid)
+        Jz = 4 / (2 * jnp.pi) * simpson(dz_dthp * vz_th, thp_grid)
 
         thp_partial = jnp.linspace(0, thp_, N_grid)
         vz_th_partial = get_vz(rz, thp_partial)
         dz_dthp_partial = dz_dthp_func(rz, thp_partial)
         dt = simpson(dz_dthp_partial / vz_th_partial, thp_partial)
-        thz = 2*jnp.pi * dt / Tz
+        thz = 2 * jnp.pi * dt / Tz
 
         return Tz, Jz, thz
 
@@ -235,7 +228,7 @@ class VerticalOrbitModel:
     @partial(jax.jit, static_argnames=["self"])
     def get_ln_dens(self, rz):
         self._validate_state()
-        ln_dens_vals = self.state['ln_dens_vals']
+        ln_dens_vals = self.state["ln_dens_vals"]
         spl = InterpolatedUnivariateSpline(self.dens_knots, ln_dens_vals, k=3)
         return spl(rz)
 
