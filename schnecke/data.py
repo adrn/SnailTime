@@ -2,6 +2,7 @@ import astropy.units as u
 import numpy as np
 import jax.numpy as jnp
 
+from .config import usys
 
 def get_data_im(z, vz, bins):
     """
@@ -9,8 +10,8 @@ def get_data_im(z, vz, bins):
     histogram / image of number counts.
     """
     data_H, xe, ye = np.histogram2d(
-        vz.to_value(u.kpc/u.Myr),
-        z.to_value(u.kpc),
+        vz.decompose(usys).value,
+        z.decompose(usys).value,
         bins=(bins['vz'], bins['z'])
     )
     xc = 0.5 * (xe[:-1] + xe[1:])
