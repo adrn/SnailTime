@@ -6,15 +6,7 @@ from jax.scipy.special import gammaln
 from jax_cosmo.scipy.interpolate import InterpolatedUnivariateSpline
 import jaxopt
 
-# from .pchip import pchip_interpolate_uniform
-
-
-@jax.jit
-def distort_rz(rz, th, es):
-    return rz * (
-        1
-        + jnp.sum(jnp.array([e * rz * jnp.cos(n * th) for n, e in es.items()]), axis=0)
-    )
+from .jax_helpers import simpson
 
 
 class VerticalOrbitModel:
@@ -22,41 +14,92 @@ class VerticalOrbitModel:
         self.dens_knots = jnp.array(dens_knots)
         self.e_knots = {int(k): jnp.array(knots) for k, knots in e_knots.items()}
 
-    @partial(jax.jit, static_argnames=["self"])
-    def get_es(self, init_rz, e_vals):
-        # e2s = pchip_interpolate_uniform(
-        #     self.e2_knots,
-        #     e2_vals,
-        #     init_rz
-        # )
-        # e4s = pchip_interpolate_uniform(
-        #     self.e4_knots,
-        #     e4_vals,
-        #     init_rz
-        # )
-        es = {}
-        for k, vals in e_vals.items():
-            es[k] = InterpolatedUnivariateSpline(
-                self.e_knots[k], jnp.cumsum(vals), k=1
-            )(init_rz)
-        return es
+        for k, knots in self.e_knots.items():
+            if len(knots) != 2:
+                raise NotImplementedError(
+                    "The current implementation of the model requires a purely linear "
+                    "function for the e_m coefficients, which is equivalent to having "
+                    f"just two knots in the (linear) spline. You passed: {len(knots)} "
+                    "knots"
+                )
 
     @partial(jax.jit, static_argnames=["self"])
-    def get_distorted_rz(self, init_rz, init_th, e_vals):
-        es = self.get_es(init_rz, e_vals)
-        rz = distort_rz(rz=init_rz, th=init_th, es=es)
-        return rz
+    def get_rz(self, rz_prime, theta_prime, e_vals):
+        es = self.get_es(rz_prime, e_vals)
+        return rz_prime * (
+            1
+            + jnp.sum(
+                jnp.array([e * jnp.cos(n * theta_prime) for n, e in es.items()]), axis=0
+            )
+        )
+
+    @partial(jax.jit, static_argnames=["self"])
+    def get_rz_prime(self, rz, theta_prime, e_vals):
+        thp = theta_prime
+
+        # convert e_vals and e_knots to slope and intercept
+        e_as = {
+            k: (e_vals[k][1] - e_vals[k][0]) / (self.e_knots[k][1] - self.e_knots[k][0])
+            for k in e_vals
+        }
+        e_bs = {k: -e_as[k] * self.e_knots[k][0] + e_vals[k][0] for k in e_vals}
+
+        terms1 = jnp.sum(jnp.array([e_bs[k] * jnp.cos(k * thp) for k in e_bs]), axis=0)
+        terms2 = jnp.sum(jnp.array([e_as[k] * jnp.cos(k * thp) for k in e_bs]), axis=0)
+        return (2 * rz) / (1 + terms1 + jnp.sqrt((1 + terms1) ** 2 + 4 * rz * terms2))
+
+    @partial(jax.jit, static_argnames=["self"])
+    def get_z(self, rz, theta_prime, e_vals, Omega):
+        rzp = self.get_rz_prime(rz, theta_prime, e_vals)
+        return rzp * jnp.sin(theta_prime) / jnp.sqrt(Omega)
+
+    @partial(jax.jit, static_argnames=["self"])
+    def get_vz(self, rz, theta_prime, e_vals, Omega):
+        rzp = self.get_rz_prime(rz, theta_prime, e_vals)
+        return rzp * jnp.cos(theta_prime) * jnp.sqrt(Omega)
+
+    @partial(jax.jit, static_argnames=["self"])
+    def get_Tz_Jz_thz(self, z, vz, e_vals, Omega, N_grid=101):
+        rz, _, thp_ = self.get_rz_th(z, vz, Omega, e_vals)
+
+        dz_dthp_func = jax.vmap(
+            jax.grad(self.get_z, argnums=1),
+            in_axes=[None, 0, None, None]
+        )
+
+        # Grid of theta_prime to do the integral over:
+        thp = jnp.linspace(0, jnp.pi / 2, N_grid)
+        vz_th = self.get_vz(rz, thp, e_vals, Omega)
+        dz_dthp = dz_dthp_func(rz, thp, e_vals, Omega)
+
+        Tz = 4 * simpson(dz_dthp / vz_th, thp)
+        Jz = 4 / (2*jnp.pi) * simpson(dz_dthp * vz_th, thp)
+
+        thp_partial = jnp.linspace(0, thp_, N_grid)
+        vz_th_partial = self.get_vz(rz, thp_partial, e_vals, Omega)
+        dz_dthp_partial = dz_dthp_func(rz, thp_partial, e_vals, Omega)
+        dt = simpson(dz_dthp_partial / vz_th_partial, thp_partial)
+        thz = 2*jnp.pi * dt / Tz
+
+        return Tz, Jz, thz
+
+    @partial(jax.jit, static_argnames=["self"])
+    def get_es(self, rz_prime, e_vals):
+        es = {}
+        for k, vals in e_vals.items():
+            es[k] = InterpolatedUnivariateSpline(self.e_knots[k], vals, k=1)(rz_prime)
+        return es
 
     @partial(jax.jit, static_argnames=["self"])
     def get_rz_th(self, z, vz, Omega, e_vals):
         x = vz / jnp.sqrt(Omega)
         y = z * jnp.sqrt(Omega)
 
-        init_rz = jnp.sqrt(x**2 + y**2)
-        init_th = jnp.arctan2(y, x)
-        rz = self.get_distorted_rz(init_rz, init_th, e_vals)
+        rz_prime = jnp.sqrt(x**2 + y**2)
+        th_prime = jnp.arctan2(y, x)
+        rz = self.get_rz(rz_prime=rz_prime, theta_prime=th_prime, e_vals=e_vals)
 
-        return rz, init_rz, init_th
+        return rz, rz_prime, th_prime
 
     @partial(jax.jit, static_argnames=["self"])
     def get_ln_dens(self, rz, ln_dens_vals):
