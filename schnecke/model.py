@@ -10,21 +10,52 @@ from .jax_helpers import simpson
 
 
 class VerticalOrbitModel:
+
     def __init__(self, dens_knots, e_knots):
+        r"""
+        Notation:
+        - :math:`\nu_0` or ``nu_0``: A scale frequency used to compute the elliptical
+          radius ``rz_prime``.
+        - :math:`r_z'` or ``rz_prime``: The "raw" elliptical radius :math:`\sqrt{z^2\,
+          \nu_0 + v_z^2 \, \nu_0^{-1}}`.
+        - :math:`\theta'` or ``theta_prime``: The "raw" z angle defined as :math:`\tan
+          {\theta'} = \frac{z}{v_z}\,\nu_0`.
+        - :math:`r_z` or ``rz``: The distorted elliptical radius :math:`r_z = r_z' \,
+          f(r_z', \theta_z')` where :math:`f(\cdot)` is the distortion function.
+        - :math:`\theta` or ``theta``: The true vertical angle.
+        - :math:`f(r_z', \theta_z')`: The distortion function is a Fourier expansion,
+          defined as: :math:`f(r_z', \theta_z') = 1+\sum_m e_m(r_z')\,\cos(m\,\theta')`
+
+        Parameters
+        ----------
+        dens_knots : array_like
+            The knot locations for the spline that controls the density function. These
+            are locations in :math:`r_z`.
+        e_knots : dict
+            Keys should be the (integer) "m" order of the distortion term (for the
+            distortion function), and values should be the knot locations for
+            interpolating the values of the distortion coefficients :math:`e_m(r_z')`.
+            Currently, this functionality has been partially disabled and the functions
+            are required to be linear, so you must pass in two knots.
+
+        """
         self.dens_knots = jnp.array(dens_knots)
         self.e_knots = {int(k): jnp.array(knots) for k, knots in e_knots.items()}
 
-        for k, knots in self.e_knots.items():
+        for m, knots in self.e_knots.items():
             if len(knots) != 2:
                 raise NotImplementedError(
                     "The current implementation of the model requires a purely linear "
                     "function for the e_m coefficients, which is equivalent to having "
-                    f"just two knots in the (linear) spline. You passed: {len(knots)} "
-                    "knots"
+                    f"just two knots in the (linear) spline. You passed {len(knots)} "
+                    f"knots for the m={m} expansion term."
                 )
 
     @partial(jax.jit, static_argnames=["self"])
     def get_rz(self, rz_prime, theta_prime, e_vals):
+        """
+        Compute the distorted radius :math:`r_z`
+        """
         es = self.get_es(rz_prime, e_vals)
         return rz_prime * (
             1
