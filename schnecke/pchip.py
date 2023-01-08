@@ -21,6 +21,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+Notes:
+https://github.com/google/jax/issues/1052
+https://github.com/google/jax/issues/347
+https://jax.readthedocs.io/en/latest/faq.html#gradients-contain-nan-where-using-where
 """
 
 import jax.numpy as jnp
