@@ -109,6 +109,10 @@ class VerticalOrbitModel:
         e_vals = {}
         e_vals[2] = jnp.array([0.0, 0.1])
         e_vals[4] = jnp.array([0.0, -0.05])
+        for m in self.e_knots.keys():
+            if m in e_vals:
+                continue
+            e_vals[m] = jnp.zeros(2)
         model.set_state({"e_vals": e_vals})
 
         model._validate_state()

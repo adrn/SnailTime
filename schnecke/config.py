@@ -1,3 +1,6 @@
+import os
+import pathlib
+
 import astropy.coordinates as coord
 import astropy.units as u
 from gala.units import galactic
@@ -9,3 +12,22 @@ galcen_frame = coord.Galactocentric(
 )
 
 usys = galactic
+
+
+def login_gea():
+    from astroquery.gaia import Gaia
+
+    user = os.environ.get("GAIA_USER", None)
+    password = os.environ.get("GAIA_PASSWORD", None)
+    credentials_path = pathlib.Path('~/.gaia/archive.login').expanduser()
+
+    if user is not None:
+        Gaia.login(user=user, password=password)
+
+    elif credentials_path.exists():
+        Gaia.login(credentials_file=credentials_path)
+
+    else:
+        raise RuntimeError("Unable to log in to Gaia archive.")
+
+    return Gaia
