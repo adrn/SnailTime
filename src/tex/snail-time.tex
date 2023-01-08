@@ -180,26 +180,66 @@ More locally, i.e. within small regions of the disk such as the solar neighborho
 The spiral was initially discovered in the vertical kinematics ($z$--$v_z$) of stars using the number density and mean azimuthal velocity of stars with well-measured parallaxes from \gaia\ Data Release 2 (\dr{2}; \citealt{Antoja:2018}).
 This feature --- and, more generally, any weak spiral in phase-space --- is understood to come from the partial phase mixing of a weakly-perturbed distribution function in a gravitational field with a gradient in the orbital frequencies \citep[e.g.,][]{Tremaine:1999, Binney:2018}.
 
-In the case of the Milky Way, it is thought that an interaction with a satellite galaxy (such as the Sagittarius dwarf galaxy) could be responsible for the perturbation(s) that caused the spiral \citep[e.g.,][]{Antoja:2018, Laporte:2019, Darling:2019}.
-Many tailored galaxy simulations with Sagittarius-motivated satellite perturbers have successfully produced phase-space spiral features in the simulated disks that qualitatively match the amplitude and morphology of the observed spiral \citep{Khanna:2019, Laporte:2019, Bland-Hawthorn:2021, Hunt:2021, Gandhi:2022}.
-Quantitatively matching the observed amplitude of asymmetry in the Milky Way with $N$-body simulations of a simulated Sagittarius-like satellite and a Galactic disk that starts from an equilibrium state has not been successful \citep{Bennett:2022}, or requires a Sagittarius mass that is inconsistent with recent constraints on the present-day mass of Sagittarius \citep{Vasiliev:XX}.
-It is therefore possible that multiple perturbations are required to produce the observed phase-space spirals \citep[e.g.,][]{Garcia-Conde:2022}, or that the response of the inner dark matter halo to the orbit of Sagittarius is an significant component of the perturbation \citep{Grand:2022}.
+In the case of the Milky Way, it is thought that an interaction with a satellite galaxy
+(such as the Sagittarius dwarf galaxy) could be responsible for the perturbation(s) that
+caused the vertical phase spirals \citep[e.g.,][]{Antoja:2018, Laporte:2019,
+Darling:2019}.
+Within this context, the spiral is a promising tool for .. studying the orbital history of Sag and mapping the mass of the disk.
+Development of methods to use the spiral to this end.
+Perturbation theory approach: response of distribution function in potential \citep{Banik}
+?? approach: Widmark
+?? approach: Frankel
+In all cases, a fundamental parameter is time since phase mixing starts (in the simplest case, this is the time of impact)
+Time can be connected to orbit of Sag, route to studying satellite merger history.
 
-
-The challenge of quantitatively matching the local phase-space spiral properties with simulations has motivated mapping the vertical spiral and its properties throughout larger observable portions of the Milky Way disk \citep[e.g.,][]{XX}. % TODO: LAMOST paper, Antoja DR3 paper
-
-Outline: Understanding of dynamical separation of spatial samples (Hunt, Gandhi). Characterize kinematic dependence of spiral (Hunt 2022), demonstration of different spiral morphologies. Method for constraining disk properties (Widmark). Perturbation timescale, amplitude (Darragh-Ford).
-
-Outline: Another avenue toward measuring a time of event is to leverage stellar astrophysics. Ages notoriously hard to measure. Can use asteroseismology, but need high-quality time series. For spiral, signal is few percent perturbation, so need large sample. Most vetted asteroseismic samples are small by these standards (APOKASC? others). Large samples from TESS, but giants (Hon 2021), still selection effects because of time-series photometry requirement.
+Outline: Another avenue toward measuring a time is to leverage stellar astrophysics. Ages notoriously hard to measure. Can use asteroseismology, but need high-quality time series. For spiral, signal is few percent perturbation, so need large sample. Most vetted asteroseismic samples are small by these standards (APOKASC? others). Large samples from TESS, but giants (Hon 2021), still selection effects because of time-series photometry requirement.
 
 Outline: Alternate approach is to use main sequence lifetime. That's the basis of this work.
 
 
+% The challenge of quantitatively matching the local phase-space spiral properties with simulations has motivated mapping the vertical spiral and its properties throughout larger observable portions of the Milky Way disk \citep[e.g.,][]{LAMOSTpaper, Hunt:2022, AntojaDR3}.
+
+
 \section{Data} \label{sec:data}
 
-Primarily use data from Gaia DR3. Usual blurb and citations. Some extra words about effective temperatures and stellar parameters, new stuff in DR3.
+We primarily use data from the \gaia\ Mission \citep{Gaia-Collaboration:2016}, Data
+Release 3 (DR3; \citealt{}).
+\gaia\ DR3 contains astrometric, spectroscopic, and photometric measurements along with
+derived stellar parameters for hundreds of millions of stars throughout the Milky Way
+(and beyond).
+In this work, we make use of the astrometry \citep{todo}, ``GSP-Phot'' stellar
+parameters \citep{todo}, and radial velocity measurements \citep{todo}.
 
-Figure 1: Show the dependence of z-vz spiral with effective temperature.
+Our initial sample is selected from \gaia\ DR3 with the following criteria:
+\begin{itemize}
+    \item High-quality astrometric measurements, $\textsf{RUWE} < 1.4$,
+    \item Measured radial velocity, $-1000~\kms < v_r < 1000~\kms$,
+    \item Near the sun; parallax $\varpi > 0.25~\mas$,
+    \item High astrometric fidelity, $\mathtt{fidelity\_v2} > 0.5$ (as described in
+    \citealt{Rybizki:2022}),
+    \item Measured effective temperature $\Teff$ and $\logg$ from the GSP-Phot pipeline.
+\end{itemize}
+We then construct our parent sample by selecting out of this sample a cube with side
+length $5.6~\kpc$ centered on the sun.
+We do this by transforming the initial sample sky position and distance (computed as
+$d=\varpi^{-1}$) to Galactocentric coordinates adopting sun–Galactic center distance of
+$R_0 = 8.275~\kpc$ \citep{Gravity-Collaboration:2021}, a null Solar position above the
+midplane (to be measured later), a radial velocity of Sgr A* of $-8.4~\kms$ (this value
+is computed using the reported $z_0 = -2.6~\kpc$ and adding their fiducial value of
+$11~\kms$; \citealt{Gravity-Collaboration:2021}), and a proper motion of Sgr A* of
+$(\mu_{\alpha,*}, \mu_\delta) = (-3.16, -5.59)~\masyr$ \citep{Reid:2020}. These values
+correspond to a total Solar velocity with respect to the Galactic center of
+$\boldsymbol{v}_\odot = (8.4, 251.8, 8.4)~\kms$.
+
+\texttt{rv\_template\_teff} < 14,500~K
+
+
+Some extra words about effective temperatures and stellar parameters, new stuff in DR3.
+
+Figure 1: Show the dependence of z-vz spiral with effective temperature selections.
+- Comments about how spiral changes with effective temperature, proxy for age selection
+- Comments about how naive visualizations that cut by guiding radius include selection effects because low-mass (preferentially older) stars only seen locally, high-mass (preferentially younger) stars seen further.
+- Make sure that in my selections, lowest temp bin is still complete at 4 kpc
 
 \todo{If we decide to include it, also words about masses (and implied ages) from asteroseismology.}
 
@@ -216,7 +256,24 @@ Stellar models to go from effective temperature / mass to lifetime.
 
 \section{Methods} \label{sec:methods}
 
-Overview.
+TODO: Overview.
+
+\subsection{Selecting stars with similar orbits}
+\label{sec:methods-select-similar-orbit}
+
+A challenge in interpreting the observed spatial variations of the spiral is that any spatially-selected region of the disk contains stars on many different types of orbits.
+For example, in a given radially- and azimuthally-selected boxel, there exist a mixture of circular orbits with radii within the radial selection, and eccentric orbits with guiding radii outside of this region, but with apo- or peri-centric radii that bring them within this radial selection.
+The implication of this fact is that stars in a given \emph{spatial} selection may have very different orbital histories, and therefore may have experienced different perturbations, and have had more or less time to phase mix relative to others in order to end up in the spatial region today.
+In other words, any spatially-selected region of the disk contains many different, superimposed phase spirals that could correspond to different initial perturbations and subsequent orbital histories.
+
+A key ... noted in \citep{LaporteXX}
+
+Outline: Understanding of dynamical separation of spatial samples (Hunt, Gandhi). Characterize kinematic dependence of spiral (Hunt 2022), demonstration of different spiral morphologies. Method for constraining disk properties (Widmark). Perturbation timescale, amplitude (Darragh-Ford).
+
+\subsection{Empirical models of the vertical orbit structure (without assuming a gravitational potential)}
+\label{sec:zvz-model}
+
+Crap about fitting the DF with my $r_z$ and $m=2$, $m=4$ distortions.
 
 Assumptions
 
@@ -227,26 +284,31 @@ Assumptions
     \item[Initial mass function] Whatever - is this needed?
 \end{description}
 
-\subsection{Empirical Models of the Phase-mixed $z$--$v_z$ Orbit Structure}
-\label{sec:zvz-structure}
-
-Crap about fitting the DF with my $r_z$ and $m=2$, $m=4$ distortions.
-
 
 \subsection{Quantifying the Amplitude of Non-phase-mixed Features}
 \label{sec:residuals}
 
 Matched filter, A/B split idea.
 
+\section{Results: Maps of amplitude of non-phase-mixed structure}
+\label{sec:results-maps}
 
 \section{Results: Spiral Onset Time as a Function of ...}
-\label{sec:results}
+\label{sec:results-spiral-time}
 
 
 \section{Discussion} \label{sec:discussion}
 
-\subsection{Limitations}
-\label{sec:limitations}
+\subsection{Is the Sagittarius impact scenario too idealized?}
+\label{sec:sag-impact}
+
+Many tailored galaxy simulations with Sagittarius-motivated satellite perturbers have successfully produced phase-space spiral features in the simulated disks that qualitatively match the amplitude and morphology of the observed spiral \citep{Khanna:2019, Laporte:2019, Bland-Hawthorn:2021, Hunt:2021, Gandhi:2022}.
+Quantitatively matching the observed amplitude of asymmetry in the Milky Way with $N$-body simulations of a simulated Sagittarius-like satellite and a Galactic disk that starts from an equilibrium state has not been successful \citep{Bennett:2022}, or requires a Sagittarius mass that is inconsistent with recent constraints on the present-day mass of Sagittarius \citep{Vasiliev:XX}.
+It is therefore possible that multiple perturbations are required to produce the observed phase-space spirals \citep[e.g.,][]{Garcia-Conde:2022}, or that the response of the inner dark matter halo to the orbit of Sagittarius is an significant component of the perturbation \citep{Grand:2022}.
+Still interesting prospect: can we see when one spiral goes away and another is left?
+
+Or, maybe not Sag and instead multiple mergers / noise \citep{Tremaine:2022}.
+In that scenario, spirals should always exist.
 
 
 \section{Conclusions} \label{sec:conclusions}
