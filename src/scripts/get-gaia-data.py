@@ -4,7 +4,7 @@ from schnecke.config import login_gea
 
 def main(data_file):
     if data_file.exists():
-        sys.exit()
+        sys.exit(0)
 
     Gaia = login_gea()
 
