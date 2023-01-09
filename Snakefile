@@ -25,21 +25,21 @@ rule get_fidelity_data:
 rule clean_data:
     input:
         "src/scripts/clean-update-data.py",
-        "src/data/TODO",
+        "src/data/dr3-rv-gspphot-parent.fits",
         "src/data/dr3-rv-sample-fidelity.fits"
     output:
-        "src/data/parent-sample-cleaned-adjusted.fits"
+        "src/data/parent-sample-cube.fits"
     log:
         "logs/clean_data.log"
     conda:
         "environment.yml"
     shell:
-        "python {input[0]} --gaia-data={input[1]} --out-file={output[0]}"
+        "python {input[0]}"
 
 rule run_fit_by_guiding_radius:
     input:
         "src/scripts/TODO.py",
-        "src/data/parent-sample-cleaned-adjusted.fits"
+        "src/data/parent-sample-cube.fits"
     output:
         "src/data/fit_by_guiding_radius/TODO"
     log:
