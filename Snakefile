@@ -1,8 +1,21 @@
 import yaml
 
+# Load config files and setup wildcards:
+with open("src/config/fit-by-guiding-radius.yml", "r") as f:
+    fbgr_config = yaml.load(f.read(), Loader=yaml.FullLoader)
+
+num_Rg_bins = int(
+    (fbgr_config["Rg_bin_cen_max"] - fbgr_config["Rg_bin_cen_min"])
+    / fbgr_config["Rg_bin_cen_step"] + 1
+)
+
 rule plots:
     input:
-        "src/plots/fit_by_guiding_radius/"
+        expand(
+            "src/plots/fit_by_guiding_radius/Rg-model-{n}-plot.png",
+            n=range(num_Rg_bins),
+            dataset="{dataset}",
+        )
 
 # NOTE: temporarily disabled these rules because I ran the scripts manually and they
 # involve some big queries / downloads to the Gaia archive
@@ -45,9 +58,6 @@ rule plots:
 #         "python {input[0]}"
 
 # -------------------------------------------------------------------------------------
-
-with open("src/config/fit-by-guiding-radius.yml", "r") as f:
-    fbgr_config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
 # rule run_fit_by_guiding_radius:
 #     input:
@@ -96,16 +106,15 @@ rule plot_fit_by_guiding_radius:
     input:
         expand(
             "src/cache/fit_by_guiding_radius/Rg-model-{n}.pkl",
-            n=range(
-                int(
-                    (fbgr_config["Rg_bin_cen_max"] - fbgr_config["Rg_bin_cen_min"])
-                    / fbgr_config["Rg_bin_cen_step"] + 1
-                )
-            ),
+            n=range(num_Rg_bins),
             dataset="{dataset}",
         )
     output:
-        "src/plots/fit_by_guiding_radius/"
+        expand(
+            "src/plots/fit_by_guiding_radius/Rg-model-{n}-plot.png",
+            n=range(num_Rg_bins),
+            dataset="{dataset}",
+        )
     log:
         "logs/fit_by_guiding_radius/plot-Rg-model.log"
     conda:
@@ -113,7 +122,7 @@ rule plot_fit_by_guiding_radius:
     shell:
         """
         python src/scripts/plot-fit-by-guiding-radius.py \\
-            --output-path={output} \\
+            --output-path=src/plots/fit_by_guiding_radius/ \\
             {input} \\
             &> {log}
         """
