@@ -11,7 +11,7 @@ from pyia import GaiaData
 from schnecke.config import galcen_frame
 import sywpaths
 
-data_file = sywpaths.data / 'parent-sample-cube.fits'
+data_file = sywpaths.data / "parent-sample-cube.fits"
 if data_file.exists():
     print(f"Data file at '{str(data_file)}' already exists")
     sys.exit(0)
@@ -22,9 +22,9 @@ fidelity_tbl = at.QTable.read(sywpaths.data / "dr3-rv-sample-fidelity.fits")
 print("Fidelity data table loaded...")
 tbl = at.join(initial_tbl, fidelity_tbl, keys="source_id")
 tbl = tbl[
-    (tbl["fidelity_v2"] > 0.5) &
-    (tbl["ruwe"] < 1.4) &
-    (tbl["rv_template_teff"] < 14_500 * u.K)
+    (tbl["fidelity_v2"] > 0.5)
+    & (tbl["ruwe"] < 1.4)
+    & (tbl["rv_template_teff"] < 14_500 * u.K)
 ]
 print("Tables joined and filtered...")
 
@@ -57,7 +57,7 @@ new_rv = tbl["radial_velocity"].copy()
 mask1 = (tbl["grvs_mag"] > 11.0 * u.mag) & (tbl["rv_template_teff"] < 8500 * u.K)
 rv = tbl["radial_velocity"][mask1]
 Grvs = tbl["grvs_mag"][mask1].value
-new_rv[mask1] = rv + (-0.02755 * Grvs**2 + 0.55863 * Grvs - 2.81129) * u.km / u.s
+new_rv[mask1] = rv + (-0.02755 * Grvs ** 2 + 0.55863 * Grvs - 2.81129) * u.km / u.s
 
 # Blomme et al. 2022, Section 5
 mask2 = (
@@ -80,7 +80,7 @@ galcen = c.transform_to(galcen_frame)
 w = gd.PhaseSpacePosition(galcen.data)
 L = w.angular_momentum()
 
-xsun = [-1., 0, 0] * galcen_frame.galcen_distance
+xsun = [-1.0, 0, 0] * galcen_frame.galcen_distance
 
 cyl = w.cylindrical
 R = cyl.rho
@@ -90,29 +90,29 @@ eilers_tbl = at.Table.read(
     sywpaths.data / "Eilers2019-circ-velocity.txt", format="ascii.basic"
 )
 eilers_vcirc = sci.InterpolatedUnivariateSpline(eilers_tbl["R"], eilers_tbl["v_c"], k=3)
-interp_vcirc = eilers_vcirc(R.to_value(u.kpc))
+interp_vcirc = eilers_vcirc(R.to_value(u.kpc)) * u.km / u.s
 
 Rg = np.abs((L[2] / interp_vcirc).to(u.kpc))
 
-tbl['dist_fixed'] = new_dist
-tbl['rv_fixed'] = new_rv
+tbl["dist_fixed"] = new_dist
+tbl["rv_fixed"] = new_rv
 
-tbl['xyz'] = w.xyz.T
-tbl['v_xyz'] = w.v_xyz.T
-tbl['z'] = w.z
-tbl['vz'] = w.v_z
+tbl["xyz"] = w.xyz.T
+tbl["v_xyz"] = w.v_xyz.T
+tbl["z"] = w.z
+tbl["vz"] = w.v_z
 
-tbl['R'] = R
-tbl['phi'] = cyl.phi
+tbl["R"] = R
+tbl["phi"] = cyl.phi
 
-tbl['L'] = L.T
-tbl['Rg'] = Rg
+tbl["L"] = L.T
+tbl["Rg"] = Rg
 
-cube_mask = np.all(np.abs(tbl['xyz'] - xsun) < (4 * u.kpc / np.sqrt(2)), axis=1)
+cube_mask = np.all(np.abs(tbl["xyz"] - xsun) < (4 * u.kpc / np.sqrt(2)), axis=1)
 
 # Fix the logg column units:
 for col in tbl.colnames:
-    if col.startswith('logg'):
+    if col.startswith("logg"):
         tbl[col] = tbl[col].value
 
 print("Final table prepared -- writing...")

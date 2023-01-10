@@ -1,10 +1,10 @@
-import sys
+import pathlib
 from schnecke.config import login_gea
 
 
 def main(data_file):
     if data_file.exists():
-        sys.exit(0)
+        return
 
     Gaia = login_gea()
 
@@ -44,4 +44,4 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", type=str, help="Output filename", dest="out")
     args = parser.parse_args()
 
-    main(args.out)
+    main(pathlib.Path(args.out))
